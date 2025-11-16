@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Johann Rupert — Client Withdrawal Tracker</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.4/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Lottie -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"></script>
+
+  <!-- GSAP for smoother animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+  /* ============================
+     Mobile-first Responsive SPA - Client-Only Version
+     Ultra-compact 6-step timeline (fully responsive)
+     Glassmorphism theme with professional animations
+     Dominant live feed on home page
+     ============================ */
+
+  :root{
+    --bg-1: #071226;
+    --bg-2: #0b1530;
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.02);
+    --glass-border: rgba(255,255,255,0.06);
+    --accent: #4e8cff;
+    --accent-2: #6ad0ff;
+    --muted: rgba(255,255,255,0.7);
+    --success: #3ddc84;
+    --danger: #ff6b6b;
+    --glass-blur: 10px;
+  }
+
+  *{box-sizing:border-box;-webkit-font-smoothing:antialiased;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:
+      radial-gradient(600px 300px at 10% 10%, rgba(78,140,255,0.06), transparent),
+      radial-gradient(500px 250px at 90% 90%, rgba(61,120,221,0.04), transparent),
+      linear-gradient(180deg,var(--bg-1), var(--bg-2));
+    color: #fff;
+    -webkit-text-size-adjust:100%;
+    min-height:100vh;
+  }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position:sticky; top:0; z-index:80;
+    display:flex; align-items:center; gap:12px;
+    padding:10px 12px;
+    backdrop-filter: blur(var(--glass-blur));
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .brand { display:flex; gap:10px; align-items:center; }
+  .logo {
+    width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg,var(--accent), var(--accent-2));
+    color:white; font-weight:800; font-size:16px;
+    box-shadow: 0 8px 24px rgba(46,96,255,0.12);
+  }
+  .brand h1 { font-size:15px; letter-spacing:0.2px; }
+  .brand small { display:block; font-size:10px; color:var(--muted); margin-top:1px; }
+
+  .nav-right { margin-left:auto; display:flex; gap:6px; }
+
+  .round-btn {
+    background:transparent; border:none; color:var(--muted); padding:8px; border-radius:10px; cursor:pointer;
+    font-size:15px;
+  }
+  .round-btn:hover { color:#fff; background: rgba(255,255,255,0.02); }
+
+  /* ---------- LAYOUT ---------- */
+  .container { max-width:1000px; margin:16px auto; padding:0 16px; }
+
+  .grid {
+    display:grid; grid-template-columns: 1fr; gap:16px;
+  }
+
+  .card {
+    background: linear-gradient(180deg, var(--glass), var(--glass-2));
+    border: 1px solid var(--glass-border);
+    border-radius:14px;
+    padding:14px;
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow: 0 10px 30px rgba(2,8,23,0.45);
+  }
+
+  /* ---------- TRACKER INPUT ---------- */
+  .hero {
+    display:flex; gap:12px; align-items:center; justify-content:space-between;
+    padding:10px 0;
+  }
+  .hero .left { flex:1; min-width:0; }
+  .hero h2 { font-size:clamp(17px,4.5vw,20px); }
+  .hero p { color:var(--muted); font-size:13px; margin-top:4px; }
+
+  .search-row { display:flex; gap:8px; margin-top:10px; }
+  .input {
+    flex:1; padding:11px 13px; border-radius:12px; border:none; outline:none;
+    background: rgba(255,255,255,0.02); color:inherit; font-size:14.5px;
+  }
+  .cta {
+    padding:11px 14px; border-radius:12px; border:none; cursor:pointer;
+    background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; font-weight:700;
+    font-size:14px; box-shadow: 0 8px 20px rgba(46,96,255,0.12);
+  }
+
+  /* ---------- ULTRA-COMPACT 6-STEP TIMELINE ---------- */
+  .timeline {
+    margin-top:14px; padding:6px 0;
+    position: relative;
+    height: 56px;
+  }
+
+  .progress-bar {
+    height: 3px; background: rgba(255,255,255,0.02); border-radius: 999px; position: absolute; top: 20px; left: 16px; right: 16px;
+  }
+  .progress-fill {
+    height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px;
+    transition: width 0.6s ease;
+  }
+
+  .steps {
+    display: flex; justify-content: space-between; position: relative; z-index: 2;
+  }
+
+  .t-step {
+    text-align: center; flex: 1; min-width: 0;
+  }
+  .t-dot {
+    width: 32px; height: 32px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.03); color: var(--muted); font-size: 12px; font-weight: 700;
+    transition: all .35s cubic-bezier(.2,.9,.2,1);
+    box-shadow: 0 4px 12px rgba(2,8,23,0.4);
+  }
+  .t-step.active .t-dot {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white; transform: scale(1.15);
+    box-shadow: 0 12px 28px rgba(46,96,255,0.22);
+  }
+  .t-step small {
+    display: block; margin-top: 6px; color: var(--muted); font-size: 9.5px; line-height: 1.2; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 70px;
+  }
+
+  /* ---------- RESULT CARD ---------- */
+  .result-area { margin-top:14px; display:none; flex-direction:column; gap:10px; }
+  .result-top { display:flex; justify-content:space-between; align-items:center; }
+  .badge { padding:6px 10px; border-radius:999px; font-weight:700; font-size:11px; }
+
+  .info-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: 8px;
+  }
+  .info-item .muted { font-size: 11px; }
+  .info-item div { font-weight: 700; font-size: 13px; margin-top: 2px; }
+
+  /* ---------- MINI CARD (LEFT) ---------- */
+  #miniCard { display:none; margin-top:12px; }
+  .mini-row { display:flex; gap:10px; align-items:center; }
+  #miniTitle { font-weight:700; font-size:14px; }
+  #miniSubtitle { font-size:12px; color:var(--muted); }
+
+  .scanner, .fake-progress {
+    height:8px; border-radius:999px; overflow:hidden; margin-top:8px;
+  }
+  .scanner .bar {
+    width:30%; height:100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+    animation: scan 1.2s linear infinite; transform: skewX(-20deg);
+  }
+  @keyframes scan { to { transform: translateX(400%) skewX(-20deg); } }
+
+  .fake-progress .bar { height:100%; width:0%; background: linear-gradient(90deg,var(--accent),var(--accent-2)); }
+
+  /* ---------- DOMINANT LIVE FEED ---------- */
+  .live-feed {
+    margin-top:20px; padding:10px; border-radius:14px; background: linear-gradient(180deg, var(--glass), var(--glass-2));
+    border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(2,8,23,0.45);
+  }
+  .live-header { font-size:16px; font-weight:700; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .live-list {
+    display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;
+  }
+  .live-item {
+    background: rgba(255,255,255,0.02); border-radius:8px; padding:8px 10px; display:flex; justify-content:space-between; align-items:center;
+    animation: fadeInItem 0.4s ease;
+  }
+  @keyframes fadeInItem { from {opacity:0; transform:translateY(8px);} }
+  .live-name { font-weight:600; font-size:13px; flex:1; }
+  .live-amount { font-size:12px; color:var(--success); margin:0 8px; }
+  .live-status { font-size:12px; color:var(--accent); margin:0 8px; }
+  .live-time { font-size:11px; color:var(--muted); }
+
+  /* ---------- NOTIFICATION TOAST ---------- */
+  .toast {
+    position: fixed; top:20px; right:20px; background: linear-gradient(90deg, var(--success), var(--accent)); color: white;
+    padding:12px 20px; border-radius:8px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index:100; animation: slideIn 0.5s ease, fadeOut 0.5s 4.5s forwards;
+  }
+  @keyframes slideIn { from {transform: translateX(100%); opacity:0;} to {transform: translateX(0); opacity:1;} }
+  @keyframes fadeOut { to {opacity:0;} }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 480px) {
+    .container { padding:0 12px; margin:12px auto; }
+    .nav { padding:8px 10px; gap:8px; }
+    .brand h1 { font-size:14px; }
+    .logo { width:34px; height:34px; font-size:15px; }
+    .hero { flex-direction:column; align-items:stretch; gap:12px; }
+    .search-row { flex-direction:column; }
+    .cta { width:100%; }
+    .t-step small { font-size:9px; max-width:50px; }
+    .t-dot { width:28px; height:28px; font-size:11px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .badge { font-size:10px; padding:5px 8px; }
+    .live-item { flex-wrap:wrap; gap:4px; }
+    .live-name { flex-basis:100%; }
+    .toast { right:10px; left:10px; top:10px; }
+    .modal-content { max-width: 90%; padding: 1.5rem; }
+    .modal-lottie { width: 80px !important; height: 80px !important; }
+  }
+
+  @media (min-width: 768px) {
+    .grid { grid-template-columns: 340px 1fr; gap:20px; }
+    .timeline { height: 64px; }
+    .t-dot { width: 36px; height: 36px; font-size: 13px; }
+    .t-step small { font-size: 10.5px; max-width: 70px; }
+    .live-list { max-height:320px; }
+  }
+
+  @media (min-width: 1024px) {
+    .container { padding:0 20px; }
+  }
+
+  /* ---------- UTILITIES ---------- */
+  .muted { color:var(--muted); }
+  .small { font-size:11px; color:var(--muted); }
+  footer { text-align:center; margin:20px 0 40px; font-size:12px; color:var(--muted); }
+
+  /* === PROCESS WITHDRAWAL BUTTON === */
+  .process-btn {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 8px 20px rgba(16,185,129,0.12);
+    margin-top: 12px;
+    display: none;
+  }
+
+  .process-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  }
+
+  /* === POP-UP MODAL WITH LOTTIE === */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    animation: fadeInUp 0.5s ease;
+  }
+
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .modal-content {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 1.8rem;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
+    animation: modalFade 0.4s ease forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  @keyframes modalFade { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+  .modal-lottie {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1.3rem;
+    color: #ef4444;
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .modal-content p {
+    font-size: 0.95rem;
+    color: #e0e7ff;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+  }
+
+  .modal-close {
+    padding: 10px 24px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+  }
+
+  .modal-close:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  /* === MODAL LOADING OVERLAY === */
+  .modal-loading {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .modal-loading .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top: 4px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">JRM</div>
+      <div>
+        <h1>Johann Rupert Investment Matrix</h1>
+        <small>Client Portal</small>
+      </div>
+    </div>
+    <div class="nav-right">
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="container">
+    <div class="grid">
+
+      <!-- LEFT: INPUT -->
+      <aside class="card">
+        <h3 style="font-size:16px;margin-bottom:4px">Track Withdrawal</h3>
+        <p class="small">Enter your personal tracking code.</p>
+
+        <div class="hero">
+          <div class="left">
+            <h2>Progress Tracker</h2>
+            <p>Real-time status updates</p>
+            <div class="search-row">
+              <input id="code" class="input" placeholder="e.g. ********" />
+              <button class="cta" onclick="startTracking()">Track</button>
+            </div>
+          </div>
+          <div id="miniLottie" style="width:44px;height:44px"></div>
+        </div>
+
+        <!-- Mini Result -->
+        <div id="miniCard" class="card">
+          <div class="mini-row">
+            <div id="miniAnim" style="width:36px;height:36px"></div>
+            <div>
+              <div id="miniTitle">—</div>
+              <div id="miniSubtitle" class="muted small">Searching…</div>
+            </div>
+          </div>
+          <div class="scanner" id="miniScanner" style="display:none"><div class="bar"></div></div>
+          <div class="fake-progress" id="miniFake" style="display:none"><div class="bar" id="miniFakeBar"></div></div>
+          <div id="miniMeta" style="margin-top:8px"></div>
+        </div>
+
+        <div class="small muted" style="margin-top:auto">Secure & private client portal</div>
+      </aside>
+
+      <!-- RIGHT: CONTENT -->
+      <section>
+
+        <!-- HOME -->
+        <div id="page-home" class="page active card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h2 style="font-size:18px">Withdrawal Status</h2>
+              <p class="small">6-step real-time tracking</p>
+            </div>
+            <div id="bigLottie" style="width:80px;height:80px"></div>
+          </div>
+
+          <!-- 6-Step Timeline -->
+          <div class="timeline" id="timeline">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="steps" id="steps"></div>
+          </div>
+
+          <!-- Result Details -->
+          <div class="result-area" id="resultArea">
+            <div class="result-top">
+              <div>
+                <div id="resultCode" style="font-weight:800;font-size:15px">—</div>
+                <div id="resultStatusText" class="muted small">—</div>
+              </div>
+              <div style="text-align:right">
+                <div id="resultBadge" class="badge">—</div>
+                <div id="resultUpdated" class="muted small">—</div>
+              </div>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="muted">Beneficiary</div>
+                <div id="resultName">—</div>
+              </div>
+              <div class="info-item">
+                <div class="muted">Amount</div>
+                <div id="resultAmount">—</div>
+              </div>
+              <div class="info-item">
+                <div class="muted">Reference</div>
+                <div id="resultRef">—</div>
+              </div>
+            </div>
+
+            <div class="scanner" id="mainScanner" style="display:none"><div class="bar"></div></div>
+            <div class="fake-progress" id="mainFake" style="display:none"><div class="bar" id="mainFakeBar"></div></div>
+            <div id="resultNotes" class="muted small" style="margin-top:10px">—</div>
+
+            <!-- Process Withdrawal Button -->
+            <button id="processBtn" class="process-btn" onclick="processWithdrawal()">Process Withdrawal</button>
+          </div>
+
+          <!-- Dominant Live Feed -->
+          <div class="live-feed">
+            <div class="live-header">
+              <span>Live Withdrawals</span>
+              <span class="small muted">Real-time activity</span>
+            </div>
+            <div class="live-list" id="liveList"></div>
+          </div>
+        </div>
+
+        <footer>
+          &copy; Johann Rupert Investment — Client Portal • Mobile-First • Secure
+        </footer>
+      </section>
+    </div>
+  </main>
+
+  <!-- OVERLAY -->
+  <div id="overlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:120;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px)">
+    <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;max-width:90%">
+      <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(90deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center">
+        <i class="bi bi-hourglass-split" style="font-size:24px;color:white"></i>
+      </div>
+      <div style="font-weight:700">Processing…</div>
+      <div class="fake-progress" style="width:180px"><div class="bar" id="overlayBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Modal Pop-up with Lottie Animation -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-content">
+      <!-- Loading Overlay -->
+      <div id="modalLoading" class="modal-loading">
+        <div class="spinner"></div>
+        <div style="color:var(--muted);font-size:0.9rem">Verifying request...</div>
+      </div>
+
+      <!-- Lottie Animation Container -->
+      <div id="modalLottie" class="modal-lottie"></div>
+      
+      <h3>Sorry</h3>
+      <p>Can't process withdrawal at the moment. Contact your agent to clear charges.</p>
+      <button class="modal-close" onclick="hideModal()">OK</button>
+    </div>
+  </div>
+
+  <script>
+  // Client-only demo data
+  const DATA = {
+    "JRM-0023": {
+      code: "JRM-0023",
+      name: "Stone Mabena",
+      amount: "R85,000.00",
+      status: 4, // Anti-Fraud Check (4th step)
+      ref: "REF-0023",
+      updated: "2025-11-16 10:33",
+      notes: "Anti-fraud verification in progress. Contact agent for clearance."
+    }
+  };
+
+  // 6 Steps
+  const STEPS = [
+    "Request Received", "Validation", "Processing", "Anti-Fraud Check", "Interbank Transfer", "Payout Processing"
+  ];
+
+  const el = id => document.getElementById(id);
+
+  // Lottie Animations
+  lottie.loadAnimation({ container: el('miniLottie'), renderer:'svg', loop:true, autoplay:true,
+    path: 'https://assets4.lottiefiles.com/packages/lf20_jtbfg2nb.json'
+  });
+  lottie.loadAnimation({ container: el('miniAnim'), renderer:'svg', loop:true, autoplay:false,
+    path: 'https://assets2.lottiefiles.com/packages/lf20_jcikwtux.json'
+  });
+  lottie.loadAnimation({ container: el('bigLottie'), renderer:'svg', loop:true, autoplay:true,
+    path: 'https://assets10.lottiefiles.com/packages/lf20_qp1q7mct.json'
+  });
+
+  // Modal Lottie: Error/Warning Animation
+  let modalLottieAnim = null;
+  function initModalLottie() {
+    modalLottieAnim = lottie.loadAnimation({
+      container: el('modalLottie'),
+      renderer: 'svg',
+      loop: true,
+      autoplay: false,
+      path: 'https://assets6.lottiefiles.com/packages/lf20_pqpmxbun.json' // Red warning/exclamation
+    });
+  }
+
+  // Build 6 steps
+  const stepsEl = el('steps');
+  for(let i = 0; i < STEPS.length; i++){
+    const div = document.createElement('div');
+    div.className = 't-step';
+    div.id = 'step-' + (i+1);
+    div.innerHTML = `
+      <div class="t-dot">${i+1}</div>
+      <small>${STEPS[i]}</small>
+    `;
+    stepsEl.appendChild(div);
+  }
+
+  function resetTimeline(){
+    for(let i=1;i<=6;i++) el('step-'+i)?.classList.remove('active');
+    el('progressFill').style.width = '0%';
+  }
+
+  function animateTimeline(to, done){
+    resetTimeline();
+    let i = 1;
+    const step = () => {
+      if(i > to){ if(done) done(); return; }
+      const s = el('step-'+i);
+      if(s) { s.classList.add('active'); gsap.to(s.querySelector('.t-dot'), {scale:1.15, duration:0.4}); }
+      gsap.to(el('progressFill'), {width: ((i/6)*100)+'%', duration:0.5, ease:'power2.out'});
+      setTimeout(() => { i++; step(); }, 320);
+    };
+    step();
+  }
+
+  function startTracking(){
+    const code = el('code').value.trim().toUpperCase();
+    if(!code){ alert('Enter your tracking code'); return; }
+    const d = DATA[code];
+    if(!d){ alert('Invalid code. Use your assigned code.'); return; }
+
+    // Show mini
+    el('miniCard').style.display = 'block';
+    el('miniTitle').textContent = code;
+    el('miniSubtitle').textContent = 'Loading…';
+    el('miniScanner').style.display = 'block';
+    el('miniFake').style.display = 'block';
+    el('miniFakeBar').style.width = '0%';
+    el('resultArea').style.display = 'none';
+
+    // Overlay
+    const ov = el('overlay'); ov.style.display = 'flex';
+    el('overlayBar').style.width = '5%';
+
+    // Fake progress
+    let p1 = 5, p2 = 0;
+    const i1 = setInterval(() => { p1 = Math.min(p1 + Math.random()*15 + 8, 94); el('overlayBar').style.width = p1+'%'; }, 300 + Math.random()*200);
+    const i2 = setInterval(() => { p2 = Math.min(p2 + Math.random()*12 + 6, 92); el('miniFakeBar').style.width = p2+'%'; }, 280 + Math.random()*200);
+
+    const delay = 2000 + Math.random()*3000;
+    setTimeout(() => {
+      clearInterval(i1); clearInterval(i2);
+      el('overlayBar').style.width = '100%'; el('miniFakeBar').style.width = '100%';
+      setTimeout(() => { ov.style.display = 'none'; }, 500);
+      setTimeout(() => {
+        el('miniScanner').style.display = 'none'; el('miniFake').style.display = 'none';
+        showResult(d);
+      }, 800);
+    }, delay);
+  }
+
+  function showResult(d){
+    el('resultArea').style.display = 'flex';
+    el('resultCode').textContent = d.code;
+    el('resultStatusText').textContent = STEPS[d.status-1];
+    el('resultName').textContent = d.name;
+    el('resultAmount').textContent = d.amount;
+    el('resultRef').textContent = d.ref;
+    el('resultUpdated').textContent = 'Updated — ' + d.updated;
+    el('resultNotes').textContent = d.notes;
+
+    const b = el('resultBadge');
+    b.textContent = 'ANTI-FRAUD CHECK';
+    b.style.background = 'rgba(255,107,107,0.1)';
+    b.style.color = 'var(--danger)';
+
+    el('mainScanner').style.display = 'block';
+    el('mainFake').style.display = 'block';
+    el('mainFakeBar').style.width = '0%';
+    let pf = 0;
+    const pi = setInterval(() => { pf = Math.min(pf + Math.random()*14 + 7, 96); el('mainFakeBar').style.width = pf+'%'; }, 260 + Math.random()*100);
+
+    animateTimeline(d.status, () => {
+      clearInterval(pi); el('mainFakeBar').style.width = '100%';
+      setTimeout(() => { el('mainScanner').style.display = 'none'; el('mainFake').style.display = 'none'; }, 600 + Math.random()*400);
+    });
+
+    el('miniSubtitle').textContent = STEPS[d.status-1];
+    el('miniMeta').innerHTML = `<div class="muted small">Amount: <strong>${d.amount}</strong></div><div class="muted small">Ref: <strong>${d.ref}</strong></div>`;
+
+    // Show Process Withdrawal button
+    el('processBtn').style.display = 'block';
+  }
+
+  // Process Withdrawal with Loading Delay
+  function processWithdrawal() {
+    const overlay = el('modalOverlay');
+    const loading = el('modalLoading');
+    const content = overlay.querySelector('.modal-content > *:not(#modalLoading)');
+
+    // Show modal + loading
+    overlay.style.display = 'flex';
+    loading.style.display = 'flex';
+    content.style.opacity = '0';
+
+    // Simulate processing delay (1.5–2.5s)
+    const delay = 1500 + Math.random() * 1000;
+    setTimeout(() => {
+      loading.style.display = 'none';
+      content.style.opacity = '1';
+      content.style.transition = 'opacity 0.4s ease';
+      if (modalLottieAnim) modalLottieAnim.play();
+    }, delay);
+  }
+
+  function hideModal() {
+    el('modalOverlay').style.display = 'none';
+    if (modalLottieAnim) modalLottieAnim.stop();
+  }
+
+  function demoPick(){ el('code').value = 'JRM-0023'; startTracking(); }
+
+  // Live Feed
+  const NAMES = ["Thabo Nkosi", "Sipho van der Merwe", "Nomvula Khumalo", "Lerato Botha", "Lebogang Smit", "Amahle Roux", "Mandla Pretorius", "Karabo Joubert", "Tshepo Fourie", "Rethabile Meyer", "Omphile Nel", "Bokamoso du Plessis", "Lesedi de Villiers", "Naledi Coetzee", "Gladys Kruger", "Michelle Naidoo", "Simphiwe Patel", "Olivia Govender", "William Singh", "Sophia Pillay"];
+  const AMOUNTS = ["R5,000", "R12,500", "R8,200", "R15,000", "R9,800", "R20,000", "R6,400", "R11,000", "R7,300", "R18,500"];
+  const STATUSES = ["Initiated", "Validated", "Processing", "Anti-Fraud Check", "Transferred", "Completed"];
+
+  function getRandomEntry(){
+    const name = NAMES[Math.floor(Math.random()*NAMES.length)];
+    const amount = AMOUNTS[Math.floor(Math.random()*AMOUNTS.length)];
+    const status = STATUSES[Math.floor(Math.random()*STATUSES.length)];
+    const time = Math.floor(Math.random()*60) + ' min ago';
+    return {name, amount, status, time};
+  }
+
+  function addLiveItem(entry, notify=false){
+    const div = document.createElement('div');
+    div.className = 'live-item';
+    div.innerHTML = `
+      <div class="live-name">${entry.name}</div>
+      <div class="live-amount">${entry.amount}</div>
+      <div class="live-status">${entry.status}</div>
+      <div class="live-time">${entry.time}</div>
+    `;
+    el('liveList').prepend(div);
+    gsap.from(div, {opacity:0, y:10, duration:0.4});
+    if(el('liveList').children.length > 20) el('liveList').removeChild(el('liveList').lastChild);
+
+    if(notify){
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = `${entry.name} ${entry.status.toLowerCase()} ${entry.amount}`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000 + Math.random()*2000);
+    }
+  }
+
+  function initLiveFeed(){
+    const list = el('liveList');
+    list.innerHTML = '';
+    for(let i=0; i<20; i++) addLiveItem(getRandomEntry());
+    setInterval(() => addLiveItem(getRandomEntry(), true), 5000 + Math.random()*8000);
+  }
+
+  // Persist live feed on refresh
+  window.addEventListener('beforeunload', () => localStorage.setItem('liveFeed', el('liveList').innerHTML));
+  if(localStorage.getItem('liveFeed')) el('liveList').innerHTML = localStorage.getItem('liveFeed');
+
+  // Init live feed immediately
+  initLiveFeed();
+
+  // Initialize Modal Lottie on load
+  window.addEventListener('load', () => {
+    initModalLottie();
+  });
+
+  el('code').addEventListener('keydown', e => { if(e.key==='Enter') startTracking(); });
+
+  window.startTracking = startTracking;
+  window.demoPick = demoPick;
+  </script>
+</body>
+</html>
